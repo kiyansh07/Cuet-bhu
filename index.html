@@ -108,21 +108,18 @@
 
   <script>
 
-import { initializeApp } from "firebase/app";
 const firebaseConfig = {
   apiKey: "AIzaSyDm5CRfCKAz_5ZQPEK9LXiNf44rS4RkgyI",
   authDomain: "cuet-bhu.firebaseapp.com",
   projectId: "cuet-bhu",
-  storageBucket: "cuet-bhu.firebasestorage.app",
+  storageBucket: "cuet-bhu.appspot.com",
   messagingSenderId: "104615584340",
   appId: "1:104615584340:web:3b69e4b92ae1ed293cc3c1"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+// Initialize Firebase (v8 style)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
     const form = document.getElementById("studentForm");
     const leaderboard = document.getElementById("leaderboard");
