@@ -167,15 +167,50 @@ const db = firebase.firestore();
       }
     }
 
-    // Auto-refresh every 5 seconds
-    setInterval(loadLeaderboard, 5000);
+ 
 
     // Refresh when filters change
     filterCategory.addEventListener("change", loadLeaderboard);
     filterGender.addEventListener("change", loadLeaderboard);
 
     // Initial load
-    loadLeaderboard();
+    function startRealTimeLeaderboard() {
+  let query = db.collection("students");
+
+  // Apply filters dynamically
+  if (filterCategory.value) {
+    query = query.where("category", "==", filterCategory.value);
+  }
+  if (filterGender.value) {
+    query = query.where("gender", "==", filterGender.value);
+  }
+
+  // Real-time listener
+  query.orderBy("marks", "desc").onSnapshot(snapshot => {
+    leaderboard.innerHTML = ""; // Clear only when data changes
+    let rank = 1;
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      leaderboard.innerHTML += `
+        <li class="flex justify-between bg-white/10 p-3 rounded-lg">
+          <span>${rank++}. ${d.name} (${d.gender}, ${d.category})</span>
+          <span class="font-bold">${d.marks}/500</span>
+        </li>`;
+    });
+
+    if (rank === 1) {
+      leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
+    }
+  });
+}
+
+// Start real-time updates when page loads
+startRealTimeLeaderboard();
+
+// Also restart whenever a filter changes
+filterCategory.addEventListener("change", startRealTimeLeaderboard);
+filterGender.addEventListener("change", startRealTimeLeaderboard);
   </script>
 </body>
 </html>
