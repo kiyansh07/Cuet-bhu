@@ -114,52 +114,57 @@
     Made with ❤️ by Kiyansh🌀
   </footer>
 
-  <script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDm5CRfCKAz_5ZQPEK9LXiNf44rS4RkgyI",
+    authDomain: "cuet-bhu.firebaseapp.com",
+    projectId: "cuet-bhu",
+    storageBucket: "cuet-bhu.appspot.com",
+    messagingSenderId: "104615584340",
+    appId: "1:104615584340:web:3b69e4b92ae1ed293cc3c1"
+  };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDm5CRfCKAz_5ZQPEK9LXiNf44rS4RkgyI",
-  authDomain: "cuet-bhu.firebaseapp.com",
-  projectId: "cuet-bhu",
-  storageBucket: "cuet-bhu.appspot.com",
-  messagingSenderId: "104615584340",
-  appId: "1:104615584340:web:3b69e4b92ae1ed293cc3c1"
-};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-// Initialize Firebase (v8 style)
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  const form = document.getElementById("studentForm");
+  const leaderboard = document.getElementById("leaderboard");
+  const filterCategory = document.getElementById("filterCategory");
+  const filterGender = document.getElementById("filterGender");
 
-    const form = document.getElementById("studentForm");
-    const leaderboard = document.getElementById("leaderboard");
-    const filterCategory = document.getElementById("filterCategory");
-    const filterGender = document.getElementById("filterGender");
+  // Handle form submissions (save with approved: false)
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const marks = parseFloat(document.getElementById("marks").value);
+    const category = document.getElementById("category").value;
+    const gender = document.getElementById("gender").value;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const marks = parseFloat(document.getElementById("marks").value);
-      const category = document.getElementById("category").value;
-      const gender = document.getElementById("gender").value;
+    if (!name || !marks || !category || !gender) return;
 
-      if (!name || !marks || !category || !gender) return;
-
-      await db.collection("students").add({ name, marks, category, gender });
-      form.reset();
+    await db.collection("students").add({ 
+      name, 
+      marks, 
+      category, 
+      gender, 
+      approved: false  // All new entries hidden until you approve
     });
+    form.reset();
+  });
 
-    async function loadLeaderboard() {
+  // Real-time leaderboard for only approved entries
+  function startRealTimeLeaderboard() {
+    let query = db.collection("students").where("approved", "==", true);
+
+    if (filterCategory.value) {
+      query = query.where("category", "==", filterCategory.value);
+    }
+    if (filterGender.value) {
+      query = query.where("gender", "==", filterGender.value);
+    }
+
+    query.orderBy("marks", "desc").onSnapshot(snapshot => {
       leaderboard.innerHTML = "";
-      let query = db.collection("students");
-
-      // Apply filters if selected
-      if (filterCategory.value) {
-        query = query.where("category", "==", filterCategory.value);
-      }
-      if (filterGender.value) {
-        query = query.where("gender", "==", filterGender.value);
-      }
-
-      const snapshot = await query.orderBy("marks", "desc").get();
       let rank = 1;
       snapshot.forEach(doc => {
         const d = doc.data();
@@ -173,55 +178,13 @@ const db = firebase.firestore();
       if (rank === 1) {
         leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
       }
-    }
-
- 
-
-    // Refresh when filters change
-    filterCategory.addEventListener("change", loadLeaderboard);
-    filterGender.addEventListener("change", loadLeaderboard);
-
-    // Initial load
-    function startRealTimeLeaderboard() {
-  let query = db.collection("students");
-
-  // Apply filters dynamically
-  if (filterCategory.value) {
-    query = query.where("category", "==", filterCategory.value);
-  }
-  if (filterGender.value) {
-    query = query.where("gender", "==", filterGender.value);
+    });
   }
 
-query.orderBy("marks", "desc").get().then(snapshot => {
-  leaderboard.innerHTML = "";
-  let rank = 1;
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    leaderboard.innerHTML += `
-      <li class="flex justify-between bg-white/10 p-3 rounded-lg">
-        <span>${rank++}. ${d.name} (${d.gender}, ${d.category})</span>
-        <span class="font-bold">${d.marks}/500</span>
-      </li>`;
-  });
-
-  if (rank === 1) {
-    leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
-  }
-});
-
-    if (rank === 1) {
-      leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
-    }
-  });
-}
-
-// Start real-time updates when page loads
-startRealTimeLeaderboard();
-
-// Also restart whenever a filter changes
-filterCategory.addEventListener("change", startRealTimeLeaderboard);
-filterGender.addEventListener("change", startRealTimeLeaderboard);
-  </script>
+  // Initialize real-time leaderboard
+  startRealTimeLeaderboard();
+  filterCategory.addEventListener("change", startRealTimeLeaderboard);
+  filterGender.addEventListener("change", startRealTimeLeaderboard);
+</script>
 </body>
 </html>
