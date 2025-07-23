@@ -187,19 +187,22 @@ const db = firebase.firestore();
     query = query.where("gender", "==", filterGender.value);
   }
 
-  // Real-time listener
-  query.orderBy("marks", "desc").onSnapshot(snapshot => {
-    leaderboard.innerHTML = ""; // Clear only when data changes
-    let rank = 1;
+query.orderBy("marks", "desc").get().then(snapshot => {
+  leaderboard.innerHTML = "";
+  let rank = 1;
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    leaderboard.innerHTML += `
+      <li class="flex justify-between bg-white/10 p-3 rounded-lg">
+        <span>${rank++}. ${d.name} (${d.gender}, ${d.category})</span>
+        <span class="font-bold">${d.marks}/500</span>
+      </li>`;
+  });
 
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      leaderboard.innerHTML += `
-        <li class="flex justify-between bg-white/10 p-3 rounded-lg">
-          <span>${rank++}. ${d.name} (${d.gender}, ${d.category})</span>
-          <span class="font-bold">${d.marks}/500</span>
-        </li>`;
-    });
+  if (rank === 1) {
+    leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
+  }
+});
 
     if (rank === 1) {
       leaderboard.innerHTML = `<li class="text-center text-gray-300">No students found.</li>`;
